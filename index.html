@@ -4,10 +4,7 @@
 #curl -LO arg9244.github.io/archfi
 #sh archfi
 
-# Install reflector
-sudo pacman -Syu reflector
-
 # Update mirrorlist
-reflector | sudo tee /etc/pacman.d/mirrorlist
+reflector -c Iran | sudo tee /etc/pacman.d/mirrorlist
 
 sudo pacman -Syu neofetch xorg-xwayland gnome-initial-setup nautilus gnome-console gnome-software
