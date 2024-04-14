@@ -9,4 +9,4 @@ reflector -c Iran | sudo tee /etc/pacman.d/mirrorlist
 
 sudo pacman -Syu neofetch xorg-xwayland gnome-initial-setup nautilus gnome-console gnome-software
 
-sudo reboot
+systemctl start gdm.service
