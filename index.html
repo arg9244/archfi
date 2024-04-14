@@ -1,6 +1,13 @@
 #!/bin/bash
 
+#to download and install run
 #curl -LO arg9244.github.io/archfi
 #sh archfi
+
+# Install reflector
+sudo pacman -Syu reflector
+
+# Update mirrorlist
+reflector | sudo tee /etc/pacman.d/mirrorlist
 
 sudo pacman -Syu neofetch xorg-xwayland gnome-initial-setup nautilus gnome-console gnome-software
