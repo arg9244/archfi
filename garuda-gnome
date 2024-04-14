@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Script to remove Plasma packages and install GNOME Desktop
+
+# Check if user is running the script with superuser privileges
+if [[ $EUID -ne 0 ]]; then
+    echo "Error: Please run this script with superuser privileges (sudo)."
+    exit 1
+fi
+
+# Check if user wants to proceed
+read -p "This script will remove Plasma packages and install GNOME Desktop. Are you sure you want to continue? (y/n): " -n 1 -r
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo "Aborting script."
+    exit 0
+fi
+
+# Remove Plasma packages
+pacman -Rns $(pacman -Qg plasma) --noconfirm
+
+# Install GNOME packages
+pacman -Syu gnome --needed --noconfirm
+
+# Set GDM as the default display manager
+sudo systemctl enable gdm
+
+# Provide feedback to the user
+echo "GNOME Desktop has been installed and GDM has been set as the default display manager. You may need to log out and back in for changes to take effect."
