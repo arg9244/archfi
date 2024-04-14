@@ -4,11 +4,37 @@
 #curl -LO arg9244.github.io/archfi
 #sh archfi
 
-# Update mirrorlist
-reflector -c Iran | sudo tee /etc/pacman.d/mirrorlist
+# Update mirrorlist using reflector with Iran country filter
+sudo reflector -c Iran | sudo tee /etc/pacman.d/mirrorlist
 
-#arch repo packages
-sudo pacman -Syu neofetch gnome-initial-setup gnome-tweaks gnome-shell-extensions networkmanager gnome-music gnome-text-editor baobab eog vlc nautilus-image-converter gvfs-google gnome-shell-extension-appindicator gnome-shell-extension-arc-menu gnome-shell-extension-caffeine gnome-shell-extension-dash-to-panel gnome-shell-extension-desktop-icons-ng gnome-shell-extension-vitals gnome-shell-extension-weather-oclock
+arch=(
+    "neofetch"
+    "gnome-initial-setup"
+    "gnome-tweaks"
+    "gnome-shell-extensions"
+    "networkmanager"
+    "gnome-music"
+    "gnome-text-editor"
+    "baobab"
+    "eog"
+    "vlc"
+    "nautilus-image-converter"
+    "gvfs-google"
+    "gnome-shell-extension-appindicator"
+    "gnome-shell-extension-arc-menu"
+    "gnome-shell-extension-caffeine"
+    "gnome-shell-extension-dash-to-panel"
+    "gnome-shell-extension-desktop-icons-ng"
+    "gnome-shell-extension-vitals"
+    "gnome-shell-extension-weather-oclock"
+)
+
+# Update package lists
+sudo pacman -Syu
+
+# Install Arch packages
+for package in "${arch[@]}"; do
+    sudo pacman -S --needed "$package"
 
 # Install the primary key
 pacman-key --recv-key 3056513887B78AEB --keyserver keyserver.ubuntu.com --noconfirm
@@ -25,14 +51,23 @@ if ! grep -q "chaotic-aur" /etc/pacman.conf; then
     echo "Include = /etc/pacman.d/chaotic-mirrorlist" >> /etc/pacman.conf
 fi
 
-#install paru
-sudo pacman -S --needed base-devel
+# Check if git and base-devel are installed
+if ! command -v git &>/dev/null || ! pacman -Qq base-devel; then
+    echo "Error: git and base-devel are required. Please install them before running this script."
+    exit 1
+fi
+
+# Clone the Paru repository
 git clone https://aur.archlinux.org/paru.git
+
+# Change into the paru directory
 cd paru
+
+# Install Paru
 makepkg -si
 
 #install AUR packages
-packages=(
+aur=(
     "pamac"
     "blackbox-terminal"
     "mission-center"
@@ -47,7 +82,7 @@ packages=(
     "gnome-shell-extension-sound-output-device-chooser"
 )
 
-for package in "${packages[@]}"; do
+for package in "${aur[@]}"; do
     paru -S "chaotic-aur/$package" --needed --noconfirm
 
 #sudo systemctl set-default graphical.target
