@@ -35,6 +35,7 @@ sudo pacman -Syu
 # Install Arch packages
 for package in "${arch[@]}"; do
     sudo pacman -S --needed "$package"
+done
 
 # Install the primary key
 pacman-key --recv-key 3056513887B78AEB --keyserver keyserver.ubuntu.com --noconfirm
@@ -51,22 +52,24 @@ if ! grep -q "chaotic-aur" /etc/pacman.conf; then
     echo "Include = /etc/pacman.d/chaotic-mirrorlist" >> /etc/pacman.conf
 fi
 
+# Script to install Pamac
+
 # Check if git and base-devel are installed
 if ! command -v git &>/dev/null || ! pacman -Qq base-devel; then
     echo "Error: git and base-devel are required. Please install them before running this script."
     exit 1
 fi
 
-# Clone the Paru repository
-git clone https://aur.archlinux.org/paru.git
+# Clone the Pamac repository
+git clone https://aur.archlinux.org/pamac-aur.git
 
-# Change into the paru directory
-cd paru
+# Change into the pamac directory
+cd pamac-aur
 
-# Install Paru
+# Install Pamac
 makepkg -si
 
-#install AUR packages
+# Array of AUR packages to install
 aur=(
     "pamac"
     "blackbox-terminal"
@@ -82,8 +85,16 @@ aur=(
     "gnome-shell-extension-sound-output-device-chooser"
 )
 
+# Check if pamac is installed
+if ! command -v pamac &>/dev/null; then
+    echo "Error: pamac is not installed. Please install pamac before running this script."
+    exit 1
+fi
+
+# Install AUR packages using pamac
 for package in "${aur[@]}"; do
-    paru -S "chaotic-aur/$package" --needed --noconfirm
+    pamac install "$package" --aur --needed --noconfirm
+done
 
 #sudo systemctl set-default graphical.target
 #sudo systemctl enable gdm --now
