@@ -7,9 +7,9 @@
 # Update mirrorlist
 reflector -c Iran | sudo tee /etc/pacman.d/mirrorlist
 
-sudo pacman -Syu neofetch xorg-xwayland gnome-initial-setup nautilus gnome-console gnome-software gnome-tweaks gnome-shell-extensions networkmanager epiphany 
+sudo pacman -Syu neofetch gnome-initial-setup nautilus gnome-console gnome-software gnome-tweaks gnome-shell-extensions networkmanager epiphany 
 
-sudo systemctl set-default graphical.target
-sudo systemctl enable gdm --now
-sudo systemctl start gdm.service
-sudo reboot
+#sudo systemctl set-default graphical.target
+#sudo systemctl enable gdm --now
+#sudo systemctl start gdm.service
+#sudo reboot
