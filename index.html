@@ -96,7 +96,7 @@ for package in "${aur[@]}"; do
     pamac install "$package" --aur --needed --noconfirm
 done
 
-#sudo systemctl set-default graphical.target
-#sudo systemctl enable gdm --now
-#sudo systemctl start gdm.service
+sudo systemctl set-default graphical.target
+sudo systemctl enable gdm --now
+sudo systemctl start gdm.service
 sudo reboot
