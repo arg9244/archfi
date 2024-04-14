@@ -10,11 +10,13 @@ reflector -c Iran | sudo tee /etc/pacman.d/mirrorlist
 #arch repo packages
 sudo pacman -Syu neofetch gnome-initial-setup gnome-tweaks gnome-shell-extensions networkmanager gnome-music gnome-text-editor baobab eog vlc nautilus-image-converter gvfs-google gnome-shell-extension-appindicator gnome-shell-extension-arc-menu gnome-shell-extension-caffeine gnome-shell-extension-dash-to-panel gnome-shell-extension-desktop-icons-ng gnome-shell-extension-vitals gnome-shell-extension-weather-oclock
 
-#enable chaotic AUR
-sudo pacman-key --recv-key 3056513887B78AEB --keyserver keyserver.ubuntu.com
-sudo pacman-key --lsign-key 3056513887B78AEB
-sudo pacman -U 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst'
-sudo pacman -U 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst'
+# Install the primary key
+pacman-key --recv-key 3056513887B78AEB --keyserver keyserver.ubuntu.com --noconfirm
+pacman-key --lsign-key 3056513887B78AEB --noconfirm
+
+# Install chaotic-keyring and chaotic-mirrorlist packages
+pacman -U --noconfirm 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst'
+pacman -U --noconfirm 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst'
 
 # Check if chaotic-aur is already in pacman.conf
 if ! grep -q "chaotic-aur" /etc/pacman.conf; then
