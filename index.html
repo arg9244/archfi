@@ -7,10 +7,47 @@
 # Update mirrorlist
 reflector -c Iran | sudo tee /etc/pacman.d/mirrorlist
 
-#arch repo
+#arch repo packages
 sudo pacman -Syu neofetch gnome-initial-setup gnome-tweaks gnome-shell-extensions networkmanager gnome-music gnome-text-editor baobab eog vlc nautilus-image-converter gvfs-google gnome-shell-extension-appindicator gnome-shell-extension-arc-menu gnome-shell-extension-caffeine gnome-shell-extension-dash-to-panel gnome-shell-extension-desktop-icons-ng gnome-shell-extension-vitals gnome-shell-extension-weather-oclock
+
+#enable chaotic AUR
+sudo pacman-key --recv-key 3056513887B78AEB --keyserver keyserver.ubuntu.com
+sudo pacman-key --lsign-key 3056513887B78AEB
+sudo pacman -U 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst'
+sudo pacman -U 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst'
+
+# Check if chaotic-aur is already in pacman.conf
+if ! grep -q "chaotic-aur" /etc/pacman.conf; then
+    # Add the chaotic-aur repository
+    echo "[chaotic-aur]" >> /etc/pacman.conf
+    echo "Include = /etc/pacman.d/chaotic-mirrorlist" >> /etc/pacman.conf
+fi
+
+#install paru
+sudo pacman -S --needed base-devel
+git clone https://aur.archlinux.org/paru.git
+cd paru
+makepkg -si
+
+#install AUR packages
+packages=(
+    "blackbox-terminal"
+    "mission-center"
+    "google-chrome"
+    "visual-studio-code-bin"
+    "nekoray"
+    "gnome-shell-extension-coverflow-alt-tab"
+    "gnome-shell-extension-blur-my-shell"
+    "gnome-shell-extension-no-overview"
+    "gnome-shell-extension-clipboard-indicator"
+    "gnome-shell-extension-openweather"
+    "gnome-shell-extension-sound-output-device-chooser"
+)
+
+for package in "${packages[@]}"; do
+    paru -S "chaotic-aur/$package" --needed --noconfirm
 
 #sudo systemctl set-default graphical.target
 #sudo systemctl enable gdm --now
 #sudo systemctl start gdm.service
-#sudo reboot
+sudo reboot
