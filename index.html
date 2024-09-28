@@ -1,102 +1,374 @@
-#!/bin/bash
+#!/usr/bin/env bash
+## ┏━┃┃┏━┛┏━┛  ┃┏━ ┏━┛━┏┛┏━┃┃  ┃  ┏━┛┏━┃
+## ┏┏┛┃┃  ┏━┛  ┃┃ ┃━━┃ ┃ ┏━┃┃  ┃  ┏━┛┏┏┛
+## ┛ ┛┛━━┛━━┛  ┛┛ ┛━━┛ ┛ ┛ ┛━━┛━━┛━━┛┛ ┛
+#	Script to install my dotfiles
 
-#to download and install run
-#curl -LO arg9244.github.io/archfi
-#sh archfi
+MER=$(tput setaf 1)
+KUN=$(tput setaf 3)
+HIJ=$(tput setaf 2)
+BRU=$(tput setaf 4)
+BLD=$(tput bold)
+RST=$(tput sgr0)
 
-# Update mirrorlist using reflector with Iran country filter
-sudo reflector -c Iran | sudo tee /etc/pacman.d/mirrorlist
+backup_folder=~/.RiceBackup
+date=$(date +%Y%m%d-%H%M%S)
 
-arch=(
-    "neofetch"
-    "gnome-initial-setup"
-    "gnome-tweaks"
-    "gnome-shell-extensions"
-    "networkmanager"
-    "gnome-music"
-    "gnome-text-editor"
-    "baobab"
-    "eog"
-    "vlc"
-    "nautilus-image-converter"
-    "gvfs-google"
-    "gnome-shell-extension-appindicator"
-    "gnome-shell-extension-arc-menu"
-    "gnome-shell-extension-caffeine"
-    "gnome-shell-extension-dash-to-panel"
-    "gnome-shell-extension-desktop-icons-ng"
-    "gnome-shell-extension-vitals"
-    "gnome-shell-extension-weather-oclock"
-)
+logo () {
+	
+	local text="${1:?}"
+	echo -en "                                  
+                    ***                 
+                  **,**                 
+                //(,***//.              
+            /**,,,/,,,,,,,.*/,          
+          *(,,.(/,,,(,,,,....#(         
+         .*..(@#@%(.(#( .... .*/        
+         ,*,(%(%&@%@@@@&(...  .@        
+          ##@@......@@@@..    .,,       
+         (/ @@@@@@@@@@@@.&/*% *,%*      
+       .#** @@&@@@@@@@@@%&&   . **      
+       ( . ,  %@@@@@(//&      **&       
+        //,/ %&@&&&&/&&,,,,  # ,#       
+        (##(##/&&&&&&*,,,.     .(//(    
+     %//,, ((///&&&((. ............//   
+  /, /...../&/&&(,........  ..... . *(/ 
+ //.......  #...   ................   ,.
+((.. .....  . ................         /                
+			  adilhyz Dotfiles\n\n"
+    printf ' %s [%s%s %s%s %s]%s\n\n' "${MER}" "${RST}" "${KUN}" "${text}" "${RST}" "${MER}" "${RST}"
+}
 
-# Update package lists
-sudo pacman -Syu
+########## ---------- You must not run this as root ---------- ##########
 
-# Install Arch packages
-for package in "${arch[@]}"; do
-    sudo pacman -S --needed "$package"
-done
-
-# Install the primary key
-pacman-key --recv-key 3056513887B78AEB --keyserver keyserver.ubuntu.com --noconfirm
-pacman-key --lsign-key 3056513887B78AEB --noconfirm
-
-# Install chaotic-keyring and chaotic-mirrorlist packages
-pacman -U --noconfirm 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-keyring.pkg.tar.zst'
-pacman -U --noconfirm 'https://cdn-mirror.chaotic.cx/chaotic-aur/chaotic-mirrorlist.pkg.tar.zst'
-
-# Check if chaotic-aur is already in pacman.conf
-if ! grep -q "chaotic-aur" /etc/pacman.conf; then
-    # Add the chaotic-aur repository
-    echo "[chaotic-aur]" >> /etc/pacman.conf
-    echo "Include = /etc/pacman.d/chaotic-mirrorlist" >> /etc/pacman.conf
-fi
-
-# Script to install Pamac
-
-# Check if git and base-devel are installed
-if ! command -v git &>/dev/null || ! pacman -Qq base-devel; then
-    echo "Error: git and base-devel are required. Please install them before running this script."
+if [ "$(id -u)" = 0 ]; then
+    echo "This script MUST NOT be run as root user."
     exit 1
 fi
 
-# Clone the Pamac repository
-git clone https://aur.archlinux.org/pamac-aur.git
+home_dir=$HOME
+current_dir=$(pwd)
 
-# Change into the pamac directory
-cd pamac-aur
-
-# Install Pamac
-makepkg -si
-
-# Array of AUR packages to install
-aur=(
-    "pamac"
-    "blackbox-terminal"
-    "mission-center"
-    "google-chrome"
-    "visual-studio-code-bin"
-    "nekoray"
-    "gnome-shell-extension-coverflow-alt-tab"
-    "gnome-shell-extension-blur-my-shell"
-    "gnome-shell-extension-no-overview"
-    "gnome-shell-extension-clipboard-indicator"
-    "gnome-shell-extension-openweather"
-    "gnome-shell-extension-sound-output-device-chooser"
-)
-
-# Check if pamac is installed
-if ! command -v pamac &>/dev/null; then
-    echo "Error: pamac is not installed. Please install pamac before running this script."
+if [ "$current_dir" != "$home_dir" ]; then
+    printf "%s%sThe script must be executed from the HOME directory.%s\n" "${BLD}" "${KUN}" "${RST}"
     exit 1
 fi
 
-# Install AUR packages using pamac
-for package in "${aur[@]}"; do
-    pamac install "$package" --aur --needed --noconfirm
+########## ---------- Welcome ---------- ##########
+
+logo "Welcome!"
+printf '%s%sThis script will check if you have the necessary dependencies, and if not, it will install them. Then, it will clone the RICE in your HOME directory.\nAfter that, it will create a secure backup of your files, and then copy the new files to your computer.\n\nMy dotfiles DO NOT modify any of your system configurations.\nYou will be prompted for your root password to install missing dependencies and/or to switch to zsh shell if its not your default.\n\nThis script doesnt have the potential power to break your system, it only copies files from my repository to your HOME directory.%s\n\n' "${BLD}" "${MER}" "${RST}"
+
+while true; do
+    read -rp " Do you wish to continue? [y/N]: " yn
+    case $yn in
+        [Yy]* ) break ;;
+        [Nn]* ) exit ;;
+        * ) printf " Error: just write 'y' or 'n'\n\n" ;;
+    esac
+done
+clear
+
+########## ---------- Install packages & needs ---------- ##########
+
+logo "Installing needed packages.."
+
+dependencias=(alacritty base-devel bspwm bat blueberry brightnessctl dunst epapirus-icon-theme eza feh ffmpegthumbnailer geany git jgmenu jq kitty \
+					libwebp lxappearance-gtk3 maim mpc mpd ncmpcpp ntfs-3g numlockx pamixer pacman-contrib \
+					papirus-icon-theme physlock picom playerctl polybar polkit-gnome ranger \
+					redshift rofi rofi-emoji rustup sxhkd stalonetray thunar thunar-archive-plugin thunar-media-tags-plugin thunar-volman tmux \
+					ttf-inconsolata ttf-jetbrains-mono ttf-jetbrains-mono-nerd ttf-joypixels ttf-terminus-nerd \
+					tumbler ueberzug unclutter webp-pixbuf-loader xautolock xclip xcolor xdg-user-dirs \
+					xdo xdotool xorg-xdpyinfo xorg-xinit xorg-xkill xorg-xprop xorg-xrandr xorg-xsetroot \
+					xorg-xwininfo xsettingsd zsh zsh-autosuggestions zsh-history-substring-search zsh-syntax-highlighting)
+
+is_installed() {
+  pacman -Qi "$1" &> /dev/null
+  return $?
+}
+
+printf "%s%sChecking for required packages...%s\n" "${BLD}" "${BRU}" "${RST}"
+for paquete in "${dependencias[@]}"; do
+    if ! is_installed "$paquete"; then
+        if sudo pacman -S "$paquete" --noconfirm >/dev/null 2>> RiceError.log; then
+            printf "%s%s%s %shas been installed succesfully.%s\n" "${BLD}" "${KUN}" "$paquete" "${BRU}" "${RST}"
+            sleep 1
+        else
+            printf "%s%s%s %shas not been installed correctly. See %sRiceError.log %sfor more details.%s\n" "${BLD}" "${KUN}" "$paquete" "${MER}" "${BRU}" "${MER}" "${RST}"
+            sleep 1
+        fi
+    else
+        printf '%s%s%s %sis already installed on your system!%s\n' "${BLD}" "${KUN}" "$paquete" "${HIJ}" "${RST}"
+        sleep 1
+    fi
+done
+sleep 5
+clear
+
+repo="https://adilhyz.github.io/adilhyz-repo/x86_64/"
+iconsu=("adilhyz-icons")
+themesu=("adilhyz-themes")
+cursorsu=("adilhyz-cursors")
+piles=("-1.1-1-any.pkg.tar.zst")
+
+icons=("${iconsu[@]/%/$piles}")
+themes=("${themesu[@]/%/$piles}")
+cursors=("${cursorsu[@]/%/$piles}")
+
+#cekpkg=("${iconsu[@]}" "${themesu[@]}" "${cursorsu[@]}")
+
+is_needs() {
+  pacman -Qi "$iconsu" "$themesu" "$cursorsu" &>/dev/null
+  return $?
+}
+
+# Memeriksa apakah paket berada dalam daftar yang diizinkan
+for pkgs in "${icons[@]}" "${themes[@]}" "${cursors[@]}"; do
+  printf '%s%s Downloading and installing: %s\n' "$pkgs"
+  if ! is_needs "$pkgs"; then
+    curl -LO "$repo/$pkgs" && sudo pacman -U "$pkgs" --noconfirm
+    rm -rf "$pkgs"
+    printf "\n"
+  else
+    printf '%s%s Package %s is already installed!\n' "${HIJ}" "$pkg" "${RST}"
+    sleep 1
+  fi
 done
 
-sudo systemctl set-default graphical.target
-sudo systemctl enable gdm --now
-sudo systemctl start gdm.service
-sudo reboot
+sleep 2
+clear
+
+########## ---------- Preparing Folders ---------- ##########
+
+logo "Preparing Folders"
+if [ ! -e "$HOME/.config/user-dirs.dirs" ]; then
+    xdg-user-dirs-update
+fi
+sleep 2 
+clear
+
+########## ---------- Cloning the Rice! ---------- ##########
+
+logo "Downloading dotfiles"
+repo_url="https://github.com/adilhyz/dotfiles-v1"
+repo_dir="$HOME/dotfiles-v1"
+
+	if [ -d "$repo_dir" ]; then
+		printf "Removing existing dotfiles repository\n"
+		rm -rf "$repo_dir"
+	fi
+
+# Clona el repositorio
+printf "Cloning dotfiles from %s\n" "$repo_url"
+git clone --depth=1 "$repo_url" "$repo_dir"
+
+sleep 2
+clear
+
+########## ---------- Backup files ---------- ##########
+
+logo "Backup files"
+printf "Backup files will be stored in %s%s%s/.RiceBackup%s \n\n" "${BLD}" "${MER}" "$HOME" "${RST}"
+sleep 10
+
+[ ! -d "$backup_folder" ] && mkdir -p "$backup_folder"
+
+for folder in bspwm alacritty picom rofi eww sxhkd dunst kitty polybar cava ncmpcpp nvim neofetch ranger Thunar tmux zsh mpd paru; do
+    if [ -d "$HOME/.config/$folder" ]; then
+        if mv "$HOME/.config/$folder" "$backup_folder/${folder}_$date" 2>> RiceError.log; then
+            printf "%s%s%s folder backed up successfully at %s%s/%s_%s%s\n" "${BLD}" "${HIJ}" "$folder" "${BIR}" "$backup_folder" "$folder" "$date" "${RST}"
+            sleep 1
+        else
+            printf "%s%sFailed to backup %s folder. See %sRiceError.log%s\n" "${BLD}" "${MER}" "$folder" "${BIR}" "${RST}"
+            sleep 1
+        fi
+    else
+        printf "%s%s%s folder does not exist, %sno backup needed%s\n" "${BLD}" "${HIJ}" "$folder" "${HIJ}" "${RST}"
+        sleep 1
+    fi
+done
+
+for folder in "$HOME"/.mozilla/firefox/*.default-release/chrome; do
+    if [ -d "$folder" ]; then
+        if mv "$folder" "$backup_folder"/chrome_"$date" 2>> RiceError.log; then
+            printf "%s%sChrome folder backed up successfully at %s%s/chrome_%s%s\n" "${BLD}" "${HIJ}" "${BRU}" "$backup_folder" "${date}" "${RST}"
+        else
+            printf "%s%sFailed to backup Chrome folder. See %sRiceError.log%s\n" "${BLD}" "${MER}" "${BRU}" "${RST}"
+        fi
+    else
+        printf "%s%sThe folder Chrome does not exist, %sno backup needed%s\n" "${BLD}" "${HIJ}" "${KUN}" "${RST}"
+    fi
+done
+
+for file in "$HOME"/.mozilla/firefox/*.default-release/user.js; do
+    if [ -f "$file" ]; then
+        if mv "$file" "$backup_folder"/user.js_"$date" 2>> RiceError.log; then
+            printf "%s%suser.js file backed up successfully at %s%s/user.js_%s%s\n" "${BLD}" "${HIJ}" "${BRU}" "$backup_folder" "${date}" "${RST}"
+        else
+            printf "%s%sFailed to backup user.js file. See %sRiceError.log%s\n" "${BLD}" "${MER}" "${BRU}" "${RST}"
+        fi
+    else
+        printf "%s%sThe file user.js does not exist, %sno backup needed%s\n" "${BLD}" "${HIJ}" "${KUN}" "${RST}"
+    fi
+done
+
+if [ -f ~/.zshrc ]; then
+    if mv ~/.zshrc "$backup_folder"/.zshrc_"$date" 2>> RiceError.log; then
+        printf "%s%s.zshrc file backed up successfully at %s%s/.zshrc_%s%s\n" "${BLD}" "${HIJ}" "${BRU}" "$backup_folder" "${date}" "${RST}"
+    else
+        printf "%s%sFailed to backup .zshrc file. See %sRiceError.log%s\n" "${BLD}" "${MER}" "${BRU}" "${RST}"
+    fi
+else
+    printf "%s%sThe file .zshrc does not exist, %sno backup needed%s\n" "${BLD}" "${HIJ}" "${KUN}" "${RST}"
+fi
+
+printf "%s%sDone!!%s\n\n" "${BLD}" "${HIJ}" "${RST}"
+sleep 5
+
+########## ---------- Copy the Rice! ---------- ##########
+
+logo "Installing dotfiles.."
+printf "Copying files to respective directories..\n"
+
+[ ! -d ~/.config ] && mkdir -p ~/.config
+[ ! -d ~/.local/bin ] && mkdir -p ~/.local/bin
+[ ! -d ~/.local/share ] && mkdir -p ~/.local/share
+
+for dirs in ~/dotfiles-v1/config/*; do
+    dir_name=$(basename "$dirs")
+    if cp -R "${dirs}" ~/.config/ 2>> RiceError.log; then
+        printf "%s%s%s %sconfiguration installed succesfully%s\n" "${BLD}" "${KUN}" "${dir_name}" "${HIJ}" "${RST}"
+        sleep 1
+    else
+        printf "%s%s%s %sconfiguration failed to been installed, see %sRiceError.log %sfor more details.%s\n" "${BLD}" "${KUN}" "${dir_name}" "${MER}" "${BRU}" "${MER}" "${RST}"
+        sleep 1
+    fi
+done
+
+##starto
+for folder in applications asciiart fonts; do
+    if cp -R ~/dotfiles-v1/misc/$folder ~/.local/share/ 2>> RiceError.log; then
+        printf "%s%s%s %sfolder copied succesfully!%s\n" "${BLD}" "${KUN}" "$folder" "${HIJ}" "${RST}"
+        sleep 1
+    else
+        printf "%s%s%s %sfolder failed to been copied, see %sRiceError.log %sfor more details.%s\n" "${BLD}" "${KUN}" "$folder" "${MER}" "${BRU}" "${MER}" "${RST}"
+        sleep 1
+    fi
+done
+
+if cp -R ~/dotfiles-v1/misc/bin ~/.local/ 2>> RiceError.log; then
+    printf "%s%sbin %sfolder copied succesfully!%s\n" "${BLD}" "${KUN}" "${HIJ}" "${RST}"
+    sleep 1
+else
+    printf "%s%sbin %sfolder failed to been copied, see %sRiceError.log %sfor more details.%s\n" "${BLD}" "${KUN}" "${MER}" "${BRU}" "${MER}" "${RST}"
+    sleep 1
+fi
+
+if cp -R ~/dotfiles-v1/misc/firefox/* ~/.mozilla/firefox/*.default-release/ 2>> RiceError.log; then
+    printf "%s%sFirefox theme %scopied succesfully!%s\n" "${BLD}" "${KUN}" "${HIJ}" "${RST}"
+    sleep 1
+else
+    printf "%s%sFirefox theme %sfailed to been copied, see %sRiceError.log %sfor more details.%s\n" "${BLD}" "${KUN}" "${MER}" "${BRU}" "${MER}" "${RST}"
+    sleep 1
+fi
+
+cp -f "$HOME"/dotfiles-v1/home/.zshrc "$HOME"
+fc-cache -rv >/dev/null 2>&1
+printf "%s%sFiles copied succesfully!!%s\n" "${BLD}" "${HIJ}" "${RST}"
+sleep 3
+
+########## ---------- Installing Yay, Paru, Cava & Eww from source ---------- ##########
+
+logo "installing Yay, Paru, Eww, tdrop & xqp"
+
+if ! command -v yay >/dev/null 2>&1; then
+	printf "%s%sInstalling yay%s\n" "${BLD}" "${BRU}" "${RST}"
+	cd
+	git clone https://aur.archlinux.org/yay.git
+	cd yay
+	makepkg -si --noconfirm
+	cd
+else
+	printf "%s%Yay is already installed%s\n" "${BLD}" "${HIJ}" "${RST}"
+fi
+
+if ! command -v paru >/dev/null 2>&1; then
+	printf "%s%sInstalling paru%s\n" "${BLD}" "${BRU}" "${RST}"
+	cd
+	git clone https://aur.archlinux.org/paru-bin.git
+	cd paru-bin
+	makepkg -si --noconfirm
+	cd
+else
+	printf "%s%sParu is already installed%s\n" "${BLD}" "${HIJ}" "${RST}"
+fi
+
+if ! command -v cava >/dev/null 2>&1; then 
+	printf "\n%s%sInstalling cava Visualizer.%s\n" "${BLD}" "${BRU}" "${RST}"
+	paru -S cava --skipreview --noconfirm
+fi
+
+# Intalling tdrop for scratchpads
+if command -v tdrop >/dev/null 2>&1; then
+	printf "\n%s%sTdrop is already installed%s\n" "${BLD}" "${HIJ}" "${RST}"
+else
+	printf "\n%s%sInstalling tdrop, this should be fast!%s\n" "${BLD}" "${BRU}" "${RST}"
+	paru -S tdrop-git --skipreview --noconfirm
+fi
+
+# Intalling xqp
+if command -v xqp >/dev/null 2>&1; then
+	printf "\n%s%sxqp is already installed%s\n" "${BLD}" "${HIJ}" "${RST}"
+else
+	printf "\n%s%sInstalling xqp, this should be fast!%s\n" "${BLD}" "${BRU}" "${RST}"
+	paru -S xqp --skipreview --noconfirm
+fi
+
+# Installing Eww
+if command -v eww >/dev/null 2>&1; then
+    printf "\n%s%sEww is already installed%s\n" "${BLD}" "${HIJ}" "${RST}"
+else
+    printf "\n%s%sInstalling Eww, this could take 10 mins or more.%s\n" "${BLD}" "${BRU}" "${RST}"
+    {
+        sudo pacman -S rustup --noconfirm
+        cd "$HOME" || exit
+        git clone https://github.com/elkowar/eww
+        cd eww || exit
+        cargo build --release --no-default-features --features x11
+        sudo install -m 755 "$HOME/eww/target/release/eww" -t /usr/bin/
+        cd "$HOME" || exit
+        rm -rf {paru-bin,.cargo,.rustup,eww}
+        } || {
+        printf "\n%s%sFailed to install Eww. You may need to install it manually%s\n" "${BLD}" "${MER}" "${RST}"
+    }
+fi
+
+########## ---------- Enabling MPD service ---------- ##########
+
+logo "Enabling mpd service"
+
+if systemctl is-enabled --quiet mpd.service; then
+    printf "\n%s%sDisabling and stopping the global mpd service%s\n" "${BLD}" "${BRU}" "${RST}"
+    sudo systemctl stop mpd.service
+    sudo systemctl disable mpd.service
+fi
+
+printf "\n%s%sEnabling and starting the user-level mpd service%s\n" "${BLD}" "${KUN}" "${RST}"
+systemctl --user enable --now mpd.service
+
+printf "%s%sDone!!%s\n\n" "${BLD}" "${HIJ}" "${RST}"
+sleep 2
+
+########## --------- Changing shell to zsh ---------- ##########
+
+logo "Changing default shell to zsh"
+
+if [[ $SHELL != "/usr/bin/zsh" ]]; then
+	printf "\n%s%sChanging your shell to zsh. Your root password is needed.%s\n\n" "${BLD}" "${KUN}" "${RST}"
+	# Cambia la shell a zsh
+	chsh -s /usr/bin/zsh
+	printf "%s%sShell changed to zsh. Please reboot.%s\n\n" "${BLD}" "${HIJ}" "${RST}"
+else
+	printf "%s%sYour shell is already zsh\nGood bye! installation finished, now reboot%s\n" "${BLD}" "${HIJ}" "${RST}"
+fi
+zsh
